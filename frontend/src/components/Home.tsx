@@ -1,7 +1,6 @@
-// LoginForm.tsx
-import React, { useState, FormEvent, ChangeEvent } from 'react';
-import pb from '../pocketbase';
-import { Link } from 'react-router-dom';
+import React, { useState, FormEvent, ChangeEvent } from "react";
+import pb from "../pocketbase";
+import { useNavigate, Link } from "react-router-dom";
 
 interface FormData {
   username: string;
@@ -9,9 +8,10 @@ interface FormData {
 }
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -28,41 +28,51 @@ const Home: React.FC = () => {
   };
 
   async function signin() {
-    const authData = await pb.collection('users').authWithPassword(formData.username, formData.password);
+    try {
+        const authData = await pb
+        .collection("users")
+        .authWithPassword(formData.username, formData.password);
 
-    console.log(pb.authStore.isValid);
-    console.log(authData);
+        if (pb.authStore.isValid) {
+            console.log("Logged in!", authData);
+            navigate("/dashboard");
+          } else {
+              alert("Failed to autheticate!");
+          }
+    } catch (error) {
+        alert("Error logging in!, please contact administator");
+        console.log(error);
+        return;
+    }
   }
 
   return (
     <div>
-        <form onSubmit={handleSubmit}>
+      <h1>Real Time Chat Application</h1>
+      <form onSubmit={handleSubmit}>
         <label>
-            Username:
-            <input
+          Username:
+          <input
             type="text"
             name="username"
             value={formData.username}
             onChange={handleChange}
-            />
+          />
         </label>
         <br />
         <label>
-            Password:
-            <input
+          Password:
+          <input
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            />
+          />
         </label>
         <br />
         <button type="submit">Login</button>
-        </form>
-
-        <a>
-            <Link to="/signup">Signup</Link>
-        </a>
+      </form>
+      <Link to="/signup">Signup</Link>
     </div>
   );
 };
