@@ -6,6 +6,7 @@ const Dashboard = () => {
 
     const handleLogout = async () => {
         pb.authStore.clear(); // clears storage (essentially logging user out)
+        alert("Successfully logged out!");
         navigate("/");
     }
 
