@@ -1,5 +1,6 @@
 import pb from "../pocketbase";
 import { useNavigate } from "react-router-dom";
+import ChatBox from "./ChatBox";
 
 const Dashboard = () => {  
     const navigate = useNavigate();
@@ -13,8 +14,15 @@ const Dashboard = () => {
     return (
         <div>
             <h1>Dashboard</h1>
-            <button onClick={handleLogout}>Logout</button>
-        </div>
+            <div>
+                <p>Logged in as {pb!.authStore!.model!.username}</p>
+                <div className="chats">
+                    <ChatBox />
+                </div>
+                <br />
+                <button onClick={handleLogout}>Logout</button>
+            </div>
+        </div> 
     );
 };
 

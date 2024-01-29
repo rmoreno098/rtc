@@ -13,7 +13,9 @@
     "pocketbase": "https://github.com/pocketbase/js-sdk",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.3"
+    "react-router-dom": "^6.21.3",
+    "react-use-websocket": "^4.5.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
