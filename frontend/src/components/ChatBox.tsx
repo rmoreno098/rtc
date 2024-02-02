@@ -15,18 +15,14 @@ const ChatBox = () => {
     useEffect(() => {
         const socket = new WebSocket("ws://127.0.0.1:8080/rtc");
 
-        socket.addEventListener("open", () => {
+        socket.addEventListener('open', () => {
             console.log("Connected to server");
         });
 
         socket.addEventListener('message', (event: MessageEvent) => {
-            // console.log("raw data", event.data)
-            // const data = JSON.parse(event.data);
-            const message = {
-                username: event.data.split(":")[0],
-                message: event.data.split(":")[1]
-            }
-            setMessages((prevMessages) => [...prevMessages, message])
+            console.log("raw data", event.data)
+            const data = JSON.parse(event.data);
+            setMessages((prevMessages) => [...prevMessages, data])
         });
 
         socket.addEventListener("close", () => {
@@ -44,7 +40,11 @@ const ChatBox = () => {
 
     const sendMessage = () => {
         if(messageInput !== "" && socket) {
-            socket.send(pb!.authStore!.model!.username + ": " + messageInput);
+            const data = JSON.stringify({
+                username: pb!.authStore!.model!.username,
+                message: messageInput
+            });
+            socket.send(data);
             setMessageInput("");
         }
     }
