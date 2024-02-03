@@ -2,59 +2,101 @@ package main
 
 import (
 	"log"
+	"reflect"
 
 	"net/http"
-	"golang.org/x/net/websocket"
+
+	"github.com/gorilla/websocket"
 )
 
-type Server struct {
-	conns map[*websocket.Conn]bool
+var upgrader = websocket.Upgrader {
+	ReadBufferSize: 1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool { return true },	// Allow any origin
 }
 
-func NewServer() *Server {
-	return &Server{
-		conns: make(map[*websocket.Conn]bool),
+type Client struct {
+	conn *websocket.Conn
+	id string
+	send chan []byte
+}
+
+type Message struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}
+
+var (
+	clients = make(map[*Client]bool)
+)
+
+func handleWebsocket(w http.ResponseWriter, r *http.Request) {
+	log.Println("Websocket connection established!")
+	conn, err := upgrader.Upgrade(w, r, nil) 
+	if err != nil {
+		log.Println(err)
+		return
 	}
+
+	client := &Client{conn: conn, send: make(chan []byte), id: r.URL.Query().Get("id")}
+	clients[client] = true
+
+	log.Println("Client connected!", client.conn.RemoteAddr())
+
+	go client.read()
+	go client.write()
 }
 
-func (s *Server) AddConn(conn *websocket.Conn) {
-	s.conns[conn] = true
-	log.Println("New connection added", conn.RemoteAddr())
-
-	s.connectionPool(conn)
-}
-
-func (s *Server) connectionPool(conn *websocket.Conn) {
+func (c *Client) read() {
+	defer func() {
+		c.conn.Close()
+	} ()
 	for {
-		buffer := make([]byte, 1024)
-		bytes_read, err := conn.Read(buffer)	// read message into buffer
+		var received Message
+		// _, p, err := c.conn.ReadMessage()
+		err := c.conn.ReadJSON(&received)
 		if err != nil {
-			if err.Error() == "EOF" {
-				log.Println("Connection closed", conn.RemoteAddr())
-				break
-			}
-			log.Println("Error receiving message", err)
-			continue
+			log.Println(err)
+			return
 		}
 
-		msg := buffer[:bytes_read]
-		log.Println("Message received:", string(msg))
-		s.Broadcast(msg)
+		log.Println("Received message from client: ", received, reflect.TypeOf(received))
+
+		broadcast([]byte(received.Message))
 	}
 }
 
-func (s *Server) Broadcast(msg []byte) {
-	for conn := range s.conns {
-		if _, err := conn.Write(msg); err != nil {
-			log.Println("Error sending message to connection", err)
+func (c *Client) write() {
+	defer func() {
+		c.conn.Close()
+	} ()
+	for {
+		select {
+		case message, ok := <-c.send:
+			if !ok {
+				return
+			}
+			log.Println(c.id, "said:", string(message))
+			// c.conn.WriteMessage(websocket.TextMessage, append([]byte(c.id), message...))
+			c.conn.WriteJSON(Message{ID: c.id, Message: string(message)})
+		}
+	}
+}
+
+func broadcast(message []byte) {
+	for client := range clients {
+		select {
+		case client.send <- message:
+		default:
+			close(client.send)
+			delete(clients, client)
 		}
 	}
 }
 
 func main() {
-	server := NewServer()
-	http.Handle("/rtc", websocket.Handler(server.AddConn))
-	
+		
+	http.HandleFunc("/rtc", handleWebsocket)	
 	log.Println("Listening on port 8080!")
 	http.ListenAndServe(":8080", nil)
 }

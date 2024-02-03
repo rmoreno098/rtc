@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import pb from "../pocketbase";
 
 interface Message {
-    username: string;
+    id: string;
     message: string;
 }
 
@@ -10,10 +10,9 @@ const ChatBox = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageInput, setMessageInput] = useState<string>("");
     const [socket, setSocket] = useState<WebSocket | null>(null);
-    // const [connected, setConnected] = useState(false);
 
     useEffect(() => {
-        const socket = new WebSocket("ws://127.0.0.1:8080/rtc");
+        const socket = new WebSocket(`ws://127.0.0.1:8080/rtc?id=${pb!.authStore!.model!.username}`);
 
         socket.addEventListener('open', () => {
             console.log("Connected to server");
@@ -41,7 +40,6 @@ const ChatBox = () => {
     const sendMessage = () => {
         if(messageInput !== "" && socket) {
             const data = JSON.stringify({
-                username: pb!.authStore!.model!.username,
                 message: messageInput
             });
             socket.send(data);
@@ -63,7 +61,7 @@ const ChatBox = () => {
                 <ul>
                     {messages.map((message, index) => (
                         <li key={index}>
-                            <span>{message.username + ":"}</span>
+                            <span>{message.id + ":"}</span>
                             <span>{message.message}</span>
                         </li>
                     ))} 
