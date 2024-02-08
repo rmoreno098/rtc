@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"reflect"
-
 	"net/http"
-
+	"encoding/json"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,6 +20,7 @@ type Client struct {
 }
 
 type Message struct {
+	Type    string `json:"type"`
 	ID      string `json:"id"`
 	Message string `json:"message"`
 }
@@ -60,9 +59,9 @@ func (c *Client) read() {
 			return
 		}
 
-		log.Println("Received message from client: ", received, reflect.TypeOf(received))
-
-		broadcast([]byte(received.Message))
+		received.ID = c.id
+		log.Println("Received", received.Type, "from client ", received.ID, ":", received.Message)
+		broadcast(received)
 	}
 }
 
@@ -78,15 +77,21 @@ func (c *Client) write() {
 			}
 			log.Println(c.id, "said:", string(message))
 			// c.conn.WriteMessage(websocket.TextMessage, append([]byte(c.id), message...))
-			c.conn.WriteJSON(Message{ID: c.id, Message: string(message)})
+			c.conn.WriteMessage(websocket.TextMessage, message)
+			// c.conn.WriteJSON(message)
 		}
 	}
 }
 
-func broadcast(message []byte) {
+func broadcast(message Message) {
+	message_to_bytes, err := json.Marshal(message)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	for client := range clients {
 		select {
-		case client.send <- message:
+		case client.send <- message_to_bytes:
 		default:
 			close(client.send)
 			delete(clients, client)
@@ -95,7 +100,6 @@ func broadcast(message []byte) {
 }
 
 func main() {
-		
 	http.HandleFunc("/rtc", handleWebsocket)	
 	log.Println("Listening on port 8080!")
 	http.ListenAndServe(":8080", nil)

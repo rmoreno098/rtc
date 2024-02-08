@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import pb from "../pocketbase";
 
 interface Message {
+    type: string;
     id: string;
     message: string;
 }
@@ -19,9 +20,11 @@ const ChatBox = () => {
         });
 
         socket.addEventListener('message', (event: MessageEvent) => {
-            console.log("raw data", event.data)
+            console.log("raw data", event.data);
             const data = JSON.parse(event.data);
-            setMessages((prevMessages) => [...prevMessages, data])
+            if (data.type === "message") {
+                setMessages((prevMessages) => [...prevMessages, data]) 
+            }
         });
 
         socket.addEventListener("close", () => {
@@ -40,6 +43,7 @@ const ChatBox = () => {
     const sendMessage = () => {
         if(messageInput !== "" && socket) {
             const data = JSON.stringify({
+                type: "message",
                 message: messageInput
             });
             socket.send(data);
@@ -61,7 +65,7 @@ const ChatBox = () => {
                 <ul>
                     {messages.map((message, index) => (
                         <li key={index}>
-                            <span>{message.id + ":"}</span>
+                            <span>{message.id + ": "}</span>
                             <span>{message.message}</span>
                         </li>
                     ))} 
@@ -71,6 +75,7 @@ const ChatBox = () => {
                 type="text" 
                 placeholder="Enter message"
                 onChange={(e) => messageHandler(e)}
+                value={messageInput}
             />
             <button 
                 onClick={sendMessage}>
