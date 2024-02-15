@@ -7,6 +7,10 @@ interface FormData {
   password: string;
 }
 
+interface Error {
+  message: string;
+}
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [loginError, setError] = useState<string>("");
@@ -30,19 +34,13 @@ const Home: React.FC = () => {
 
   async function signin() {
     try {
-        const authData = await pb
-        .collection("users")
-        .authWithPassword(formData.username, formData.password);
-
-        if (pb.authStore.isValid) {
-            console.log("Logged in!", authData);
-            navigate("/dashboard");
-          } else {
-              alert("Failed to autheticate!");
-          }
+      const authData = await pb.collection("users").authWithPassword(formData.username, formData.password);
+      if (pb.authStore.isValid) {
+        console.log("Logged in!", authData);
+        navigate("/dashboard");
+      }
     } catch (error) {
-      setError(error.message);
-      // alert("Error logging in! please contact administator");
+      setError((error as Error).message);
       return;
     }
   }
@@ -50,50 +48,68 @@ const Home: React.FC = () => {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="w-full max-w-xs">
-        <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" onSubmit={handleSubmit}>
+        <form
+          className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+          onSubmit={handleSubmit}
+        >
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Username
             </label>
-            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="username"
               name="username"
-              type="text" 
+              type="text"
               placeholder="Username"
               value={formData.username}
-              onChange={handleChange}/>
+              onChange={handleChange}
+            />
           </div>
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Password
             </label>
-            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-              id="password" 
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="password"
               name="password"
-              type="password" 
+              type="password"
               placeholder="******************"
               value={formData.password}
-              onChange={handleChange}/>
+              onChange={handleChange}
+            />
           </div>
           <div className="flex items-center justify-between">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="submit"
+            >
               Sign In
             </button>
-            <Link className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" to="/signup">
-              Sign Up 
+            <Link
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              to="/signup"
+            >
+              Sign Up
             </Link>
             {/* <Link className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" to="/signup">
               Forgot Password?
             </Link> */}
           </div>
-          {loginError && ( <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative" role="alert">
-            <strong className="font-bold">{loginError}</strong>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
-              <button onClick={()=>setError("")}>
-                <span className="text-2xl">&times;</span>
-              </button>
-            </span>
-          </div>)}
+          {loginError && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
+              role="alert"
+            >
+              <strong className="font-bold">{loginError}</strong>
+              <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <button onClick={() => setError("")}>
+                  <span className="text-2xl">&times;</span>
+                </button>
+              </span>
+            </div>
+          )}
         </form>
       </div>
     </div>
