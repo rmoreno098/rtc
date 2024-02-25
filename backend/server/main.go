@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"sync"
-	// "strings"
 	"net/http"
 	"encoding/json"
 	"github.com/gorilla/websocket"
@@ -48,7 +47,7 @@ func handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Client connected!", client.conn.RemoteAddr())
 	// broadcastConnectedUsersMessage()
-
+  
 	go client.read()
 	go client.write()
 }
@@ -94,7 +93,6 @@ func broadcastMessages(message Message) {
 		log.Println(err)
 		return
 	}
-
 	for client := range clients {
 		select {
 		case client.send <- message_to_bytes:

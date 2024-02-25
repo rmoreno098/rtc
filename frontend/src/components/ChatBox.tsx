@@ -55,6 +55,7 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
     };
   }, []);
 
+
   const sendMessage = () => {
     if (messageInput !== "" && websocket) {
       const data = JSON.stringify({
@@ -111,6 +112,7 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
           >
             Send
           </button>
+
         </div>
       </div>
     </div>
