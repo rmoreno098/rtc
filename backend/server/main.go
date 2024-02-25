@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"sync"
+	// "strings"
 	"net/http"
 	"encoding/json"
 	"github.com/gorilla/websocket"
@@ -27,6 +29,7 @@ type Message struct {
 
 var (
 	clients = make(map[*Client]bool)
+	clientMux = &sync.Mutex{}
 )
 
 func handleWebsocket(w http.ResponseWriter, r *http.Request) {
@@ -38,9 +41,13 @@ func handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{conn: conn, send: make(chan []byte), id: r.URL.Query().Get("id")}
+
+	clientMux.Lock()
 	clients[client] = true
+	clientMux.Unlock()
 
 	log.Println("Client connected!", client.conn.RemoteAddr())
+	// broadcastConnectedUsersMessage()
 
 	go client.read()
 	go client.write()
@@ -52,7 +59,6 @@ func (c *Client) read() {
 	} ()
 	for {
 		var received Message
-		// _, p, err := c.conn.ReadMessage()
 		err := c.conn.ReadJSON(&received)
 		if err != nil {
 			log.Println(err)
@@ -61,7 +67,8 @@ func (c *Client) read() {
 
 		received.ID = c.id
 		log.Println("Received", received.Type, "from client ", received.ID, ":", received.Message)
-		broadcast(received)
+		// broadcastConnectedUsersMessage()
+		broadcastMessages(received)
 	}
 }
 
@@ -76,19 +83,18 @@ func (c *Client) write() {
 				return
 			}
 			log.Println(c.id, "said:", string(message))
-			// c.conn.WriteMessage(websocket.TextMessage, append([]byte(c.id), message...))
 			c.conn.WriteMessage(websocket.TextMessage, message)
-			// c.conn.WriteJSON(message)
 		}
 	}
 }
 
-func broadcast(message Message) {
+func broadcastMessages(message Message) {
 	message_to_bytes, err := json.Marshal(message)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
 	for client := range clients {
 		select {
 		case client.send <- message_to_bytes:
@@ -98,6 +104,19 @@ func broadcast(message Message) {
 		}
 	}
 }
+
+// func broadcastConnectedUsersMessage() {
+// 	var connected_users []string
+// 	for client := range clients {
+// 		connected_users = append(connected_users, client.id)
+// 	}
+
+// 	clientMux.Lock()
+// 	defer clientMux.Unlock()
+// 	connectedUsersString := strings.Join(connected_users, ", ")
+// 	message := Message{Type: "connected_users", Message: "Connected users: " + connectedUsersString}
+// 	broadcastMessages(message)
+// }
 
 func main() {
 	http.HandleFunc("/rtc", handleWebsocket)	

@@ -46,8 +46,13 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen bg-slate-600">
       <div className="w-full max-w-xs">
+        <div className="text-center text-3xl mb-4">
+          <h1 className="text-white font-outline-2 hover:font-outline-4">
+            Real Time Chat
+          </h1>
+        </div>
         <form
           className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
           onSubmit={handleSubmit}
@@ -61,7 +66,7 @@ const Home: React.FC = () => {
               id="username"
               name="username"
               type="text"
-              placeholder="Username"
+              placeholder="username or email"
               value={formData.username}
               onChange={handleChange}
             />
@@ -75,20 +80,20 @@ const Home: React.FC = () => {
               id="password"
               name="password"
               type="password"
-              placeholder="******************"
+              placeholder="**********"
               value={formData.password}
               onChange={handleChange}
             />
           </div>
           <div className="flex items-center justify-between">
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-blue-500 hover:bg-blue-700 focus:outline-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="submit"
             >
               Sign In
             </button>
             <Link
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-green-500 hover:bg-green-700 focus:outline-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               to="/signup"
             >
               Sign Up
