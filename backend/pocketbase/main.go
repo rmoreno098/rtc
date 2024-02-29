@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+    // start new pocketbase instance
     app := pocketbase.New()
 
     // serves static files from the provided public dir (if exists)
@@ -23,35 +24,42 @@ func main() {
         return nil
     })
 
+    // create api route
     app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
         e.Router.GET("/rtc", echo.HandlerFunc(handleWebsocket))
         return nil
     })
 
+    // start the server
     if err := app.Start(); err != nil {
         log.Fatal(err)
     }
 }
 
+// cretae a map of clients and a mutex to handle concurrent access
 var (
 	clients = make(map[*Client]bool)
 	clientMux = &sync.Mutex{}
 )
 
+// Message struct
 type Message struct {
 	Type    string `json:"type"`
 	ID      string `json:"id"`
 	Message string `json:"message"`
 }
 
+// Client struct
 type Client struct {
 	conn *websocket.Conn
 	id string
 	send chan []byte
 }
 
+// function called when a new websocket connection is made
 func handleWebsocket(c echo.Context) error {
 
+    // upgrade the http connection to a websocket connection
     upgrader := websocket.Upgrader {
         ReadBufferSize: 1024,
         WriteBufferSize: 1024,
@@ -64,30 +72,40 @@ func handleWebsocket(c echo.Context) error {
         return err
     }
 
-    client := &Client{conn: conn, send: make(chan []byte), id: c.Request().URL.Query().Get("id")}
+    // create a new client
+    client := &Client{
+        conn: conn, send: make(chan []byte), 
+        id: c.Request().URL.Query().Get("id")}
     
+    // safely add the client to the map
     clientMux.Lock()
     clients[client] = true
     clientMux.Unlock()
 
     log.Println("Client connected!", client.conn.RemoteAddr())
 
+    // send a message to all clients with the updated list of online users
 	onlinePresence()
 
+    // start the read and write goroutines
     go client.read()
     go client.write()
 
     return nil
 }
 
+// function to send a message to all clients with the updated list of online users
 func onlinePresence() {
 	var onlineUsers []string
+
+    // safely get the list of online users
 	clientMux.Lock()
 	for client := range clients {
 		onlineUsers = append(onlineUsers, client.id)
 	}
 	clientMux.Unlock()
 
+    // create a message with the updated list of online users
 	message := Message{Type: "status", Message: strings.Join(onlineUsers, ", ")}
 	message_to_bytes, err := json.Marshal(message)
 	if err != nil {
@@ -95,6 +113,7 @@ func onlinePresence() {
 		return
 	}
 
+    // send out the message
 	for client := range clients {
 		if err := client.conn.WriteMessage(websocket.TextMessage, message_to_bytes); err != nil {
 			log.Println(err)
@@ -102,6 +121,7 @@ func onlinePresence() {
 	}
 }
 
+// function to read new messages from the client
 func (c *Client) read() {
 	defer func() {
 		c.conn.Close()
@@ -119,6 +139,7 @@ func (c *Client) read() {
 	}
 }
 
+// function to send messages to the client
 func (c *Client) write() {
 	defer func() {
 		c.conn.Close()
@@ -135,6 +156,7 @@ func (c *Client) write() {
 	}
 }
 
+// function to broadcast messages to all clients
 func broadcastMessages(message Message) {
 	message_to_bytes, err := json.Marshal(message)
 	if err != nil {
