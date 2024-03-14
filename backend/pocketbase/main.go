@@ -143,6 +143,9 @@ func (c *Client) read() {
 func (c *Client) write() {
 	defer func() {
 		c.conn.Close()
+        clientMux.Lock()
+        delete(clients, c)
+        clientMux.Unlock()
 	} ()
 	for {
 		select {
