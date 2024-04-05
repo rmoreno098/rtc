@@ -46,13 +46,14 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
 
     socket.addEventListener("close", () => {
       console.log("Disconnected from server");
+      socket.close();
     });
 
     setSocket(socket);
 
-    return () => {
-      socket.close();
-    };
+    // return () => {
+    //   socket.close();
+    // };
   }, []);
 
 

@@ -50,7 +50,7 @@ const Home: React.FC = () => {
       <div className="w-full max-w-xs">
         <div className="text-center text-3xl mb-4">
           <h1 className="text-white font-outline-2 hover:font-outline-4">
-            Real Time Chat
+            <strong>R</strong>eal <strong>T</strong>ime <strong>C</strong>hat
           </h1>
         </div>
         <form
@@ -86,18 +86,18 @@ const Home: React.FC = () => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <button
-              className="bg-blue-500 hover:bg-blue-700 focus:outline-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              type="submit"
-            >
-              Sign In
-            </button>
             <Link
               className="bg-green-500 hover:bg-green-700 focus:outline-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               to="/signup"
             >
               Sign Up
             </Link>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 focus:outline-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="submit"
+            >
+              Sign In
+            </button>
             {/* <Link className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" to="/signup">
               Forgot Password?
             </Link> */}

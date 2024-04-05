@@ -44,13 +44,17 @@ const Dashboard = () => {
         </div>
         <div
           id="active-users"
-          className="box-border flex relative flex-col ml-auto bg-white max-w-[10%] size-full border-l border-black"
+          className="box-border flex relative flex-col ml-auto bg-white max-w-[10%] size-full border-l border-black items-center"
         >
           <h1 className="text-center underline">Online Users</h1>
           <div className="mx-2">
             <ul>
                 {connectedUsers.map((user, index) => (
-                <li key={index}>{user}</li>
+                <li key={index} className="p-1">
+                  <button className="border rounded" onClick={() => {console.log("i was clicked")}}>
+                    {user}
+                  </button>
+                </li>
                 ))}
             </ul>
           </div>
