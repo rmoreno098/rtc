@@ -17,15 +17,32 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
   const [messageInput, setMessageInput] = useState<string>("");
   const [websocket, setSocket] = useState<WebSocket | null>(null);
 
-  useEffect(() => {
-    const socket = new WebSocket(
-      `ws://127.0.0.1:8090/rtc?id=${pb!.authStore!.model!.username}`
-    );
+  console.log(websocket)
+  console.log(messages);
+  console.log(users);
 
+  useEffect(() => {
+    if (!websocket) {
+      initializeConnection();
+    }
+
+    return () => {
+      if (websocket) {
+        websocket.close();
+      }
+    };
+  }, [websocket]);
+
+
+  const initializeConnection = async () => {
+    const socket = new WebSocket(`ws://127.0.0.1:8090/api/rtc?id=${pb!.authStore!.model!.username}`);
+
+    // event listener for opening connection
     socket.addEventListener("open", () => {
       console.log("Connected to server");
     });
 
+    // event listener for incoming messages
     socket.addEventListener("message", (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
@@ -42,20 +59,15 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
       } catch (error) {
         console.log("Error parsing message:", error);
       }
-    });
+    }); 
 
+    // event listener for closing connection
     socket.addEventListener("close", () => {
       console.log("Disconnected from server");
-      socket.close();
     });
 
     setSocket(socket);
-
-    // return () => {
-    //   socket.close();
-    // };
-  }, []);
-
+  }
 
   const sendMessage = () => {
     if (messageInput !== "" && websocket) {
@@ -72,9 +84,6 @@ const ChatBox: React.FC<Props> = ({ onConnectedUsersUpdate }) => {
     e.preventDefault();
     setMessageInput(e.currentTarget.value);
   };
-
-  console.log(messages);
-  console.log(users);
 
   return (
     <div className="h-screen flex flex-col my-2">

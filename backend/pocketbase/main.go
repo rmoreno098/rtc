@@ -1,13 +1,15 @@
 package main
 
 import (
-	"os"
+	"encoding/json"
+	"io"
 	"log"
-	"sync"
+	"net/http"
+	"os"
 	"strings"
-    "net/http"
-    "encoding/json"
-    "github.com/gorilla/websocket"
+	"sync"
+
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
@@ -24,9 +26,20 @@ func main() {
         return nil
     })
 
+	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		e.Router.GET("/api/check_map", echo.HandlerFunc(func(c echo.Context) error {
+			var x []MapResponse
+			for client := range clients {
+				x = append(x, MapResponse{ID: client.id})
+			}
+			return c.JSON(http.StatusOK, x)
+		}))
+		return nil
+	})
+
     // create api route
     app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-        e.Router.GET("/rtc", echo.HandlerFunc(handleWebsocket))
+        e.Router.GET("/api/rtc", echo.HandlerFunc(handleWebsocket))
         return nil
     })
 
@@ -36,7 +49,7 @@ func main() {
     }
 }
 
-// create a map of clients and a mutex to handle concurrent access
+// map of clients and a mutex lock to handle concurrent access
 var (
 	clients = make(map[*Client]bool)
 	clientMux = &sync.Mutex{}
@@ -47,6 +60,10 @@ type Message struct {
 	Type    string `json:"type"`
 	ID      string `json:"id"`
 	Message string `json:"message"`
+}
+
+type MapResponse struct {
+	ID string `json:"id"`
 }
 
 // Client struct
@@ -128,14 +145,23 @@ func onlinePresence() {
 // function to read new messages from the client
 func (c *Client) read() {
 	defer func() {
-		c.conn.Close()
+		closeConnection(c)
 	} ()
+
+	if c.conn == nil {
+		return
+	}
+
 	for {
 		var received Message
 		err := c.conn.ReadJSON(&received)
 		if err != nil {
-			log.Println("Error reading message from client:", err)
-			return
+			if err == io.EOF {
+				log.Println("Client disconnected")
+			} else {
+				log.Println("Error reading message from client:", err)
+			}
+			return 
 		}
 
 		received.ID = c.id
@@ -146,10 +172,7 @@ func (c *Client) read() {
 // function to send messages to the client
 func (c *Client) write() {
 	defer func() {
-		c.conn.Close()
-        clientMux.Lock()
-        delete(clients, c)
-        clientMux.Unlock()
+		closeConnection(c)
 	} ()
 	for {
 		select {
@@ -161,6 +184,15 @@ func (c *Client) write() {
 				c.conn.WriteMessage(websocket.TextMessage, message)
 		}
 	}
+}
+
+// function to handle client disconnection
+func closeConnection(c *Client) {
+	clientMux.Lock()
+	delete(clients, c)
+	log.Println("look here", clients)
+	c.conn.Close()
+	clientMux.Unlock()
 }
 
 // function to broadcast messages to all clients

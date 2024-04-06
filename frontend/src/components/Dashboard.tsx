@@ -14,10 +14,8 @@ const Dashboard = () => {
   };
 
   const handleConnectedUsersUpdate = (users: string) => {
-    // console.log("users", users);
     const temp = users.split(",");
-    const usersFiltered = [...new Set(temp)];
-    setConnectedUsers(usersFiltered);
+    setConnectedUsers(temp);
   };
 
   return (
