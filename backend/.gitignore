@@ -1,0 +1,40 @@
+/pb_data
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of `go build`
+/bin/
+/build/
+/dist/
+*.o
+*.a
+main
+
+# Go workspace file (Go 1.18+)
+/go.work
+/go.work.sum
+
+# Dependency directories (if using vendoring)
+/vendor/
+
+# Logs
+*.log
+
+# IDE/editor files
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
