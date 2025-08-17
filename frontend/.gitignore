@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+
+# Bun's cache (optional, depending on setup)
+.bun/
+
+# Build outputs
+dist/
+build/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+# Environment variables
+.env
+.env.*
+
+# IDEs and editors
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
