@@ -1,9 +1,10 @@
-import { useState, ChangeEvent, FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { useState, ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FormData } from "./models";
 import { signin } from "./actions";
 
 export default function SignIn() {
+  const navigate = useNavigate();
   const [loginError, setError] = useState<string>("");
   const [formData, setFormData] = useState<FormData>({
     username: "",
@@ -15,9 +16,9 @@ export default function SignIn() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    signin(formData, setError);
+  const handleSubmit = async () => {
+    await signin(formData, setError);
+    navigate("/home");
   };
 
   return (
@@ -29,7 +30,13 @@ export default function SignIn() {
           <span className="text-red-500 font-bold">C</span>hat
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          className="space-y-5"
+        >
           <div>
             <label
               htmlFor="username"
@@ -77,7 +84,6 @@ export default function SignIn() {
             </Link>
             <button
               type="submit"
-
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               Sign In

@@ -13,6 +13,7 @@ export async function signin(
       console.log("Logged in!", authData);
     }
   } catch (error) {
+    console.error(error);
     setError((error as Error).message);
     return;
   }
