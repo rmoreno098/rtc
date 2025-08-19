@@ -9,16 +9,17 @@ type Hub struct {
 	mu         sync.Mutex       // allow safe access to client map
 	clients    map[*Client]bool // map holding active clients
 	inbound    chan *Client     // connection request
-	broadcast  chan []Message   // message coming from a client
+	broadcast  chan []byte      // message coming from a client
 	disconnect chan *Client     // disconnects a client
 }
 
 func NewHub() *Hub {
 	hub := &Hub{
-		mu:        sync.Mutex{},
-		clients:   make(map[*Client]bool),
-		inbound:   make(chan *Client),
-		broadcast: make(chan []Message),
+		mu:         sync.Mutex{},
+		clients:    make(map[*Client]bool),
+		inbound:    make(chan *Client),
+		broadcast:  make(chan []byte),
+		disconnect: make(chan *Client),
 	}
 	go hub.run()
 	return hub
@@ -44,12 +45,16 @@ func (h *Hub) run() {
 					delete(h.clients, client)
 				}
 			}
+			h.mu.Unlock()
 		// disconnect a client
 		case client := <-h.disconnect:
-			close(h.inbound)
-			close(h.broadcast)
-			delete(h.clients, client)
-			log.Printf("closed connection for client %v", client.id)
+			h.mu.Lock()
+			if _, ok := h.clients[client]; ok {
+				close(client.outbound)
+				delete(h.clients, client)
+				log.Printf("closed connection for client %v", client.id)
+			}
+			h.mu.Unlock()
 		}
 	}
 }
