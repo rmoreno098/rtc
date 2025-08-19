@@ -2,12 +2,14 @@ import pb from "../../pocketbase";
 import { Message } from "./models";
 
 const websocketURL = "ws://localhost:8090/api/rtc/connect";
+const websocketProtocol = "c_id";
+const userId = pb.authStore.record!.id;
 
 export const initializeConnection = async (
   websocket: React.MutableRefObject<WebSocket | null>,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  websocket.current = new WebSocket(websocketURL);
+  websocket.current = new WebSocket(websocketURL, [websocketProtocol, userId]);
 
   websocket.current.onopen = () => {
     console.log("connected to server");
@@ -29,7 +31,7 @@ export const sendMessage = (
 ) => {
   if (input !== "" && websocket.current) {
     const data = JSON.stringify({
-      id: "",
+      id: userId,
       type: "message",
       message: input,
     });
