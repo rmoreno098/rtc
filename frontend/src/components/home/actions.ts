@@ -14,11 +14,11 @@ export const initializeConnection = async (
   };
 
   websocket.current.onmessage = (event) => {
-    setMessages((prev) => [...prev, event.data]);
+    setMessages((prev) => [...prev, JSON.parse(event.data)]);
   };
 
   websocket.current.onclose = () => {
-    console.log("disconnected from server");
+    alert("unable to connect to server, refresh page to try again.");
   };
 };
 

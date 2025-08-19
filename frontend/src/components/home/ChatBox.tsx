@@ -8,11 +8,14 @@ export default function ChatBox() {
   const [input, setInput] = useState<string>("");
 
   useEffect(() => {
-    if (ws != null) {
+    if (ws.current) {
+      return;
+    } else {
       initializeConnection(ws, setMessages);
     }
     return () => {
       ws.current?.close();
+      ws.current = null;
     };
   }, []);
 
