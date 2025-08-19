@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -18,7 +17,7 @@ type Message struct {
 type Client struct {
 	id       string
 	conn     *websocket.Conn
-	outbound chan []Message
+	outbound chan []byte
 	hub      *Hub
 }
 
@@ -38,7 +37,7 @@ func NewClient(w http.ResponseWriter, r *http.Request, hub *Hub) (*Client, error
 	return &Client{
 		id:       uuid.New().String(),
 		conn:     conn,
-		outbound: make(chan []Message),
+		outbound: make(chan []byte),
 		hub:      hub,
 	}, nil
 }
@@ -51,27 +50,30 @@ func (c *Client) Serve() {
 
 // read continuously reads messages from the WebSocket and closes the connection on error
 func (c *Client) read() {
+	defer c.close()
 	for {
-		log.Printf("message received: %v", c.outbound)
-		z, _ := json.Marshal(&c.outbound)
-		log.Print(z)
-		err := c.conn.ReadJSON(&c.outbound)
+		_, data, err := c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err) {
-				log.Printf("client %v disconnected\n", c.id)
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				log.Printf("client %v disconnected", c.id)
+				return
+			}
+			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("client %v lost connection", c.id)
+				return
 			}
 			log.Printf("an unexpected error occurred: %v", err)
-			break
+			return
 		}
+		c.hub.broadcast <- data
 	}
-	c.close()
 }
 
-// write continuously reads from the outbound channel and sends data to the hub's broadcast channel
+// write continuously reads from the outbound channel and writes data to the WebSocket connection
 func (c *Client) write() {
+	log.Printf("client %v sent a message", c.id)
 	for data := range c.outbound {
-		log.Printf("client %v sent a message: %v", c.id, data)
-		c.hub.broadcast <- data
+		c.conn.WriteMessage(websocket.TextMessage, data)
 	}
 }
 
