@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -26,6 +25,7 @@ func NewClient(w http.ResponseWriter, r *http.Request, hub *Hub) (*Client, error
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin:     func(r *http.Request) bool { return true },
+		Subprotocols:    []string{"c_id"},
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -35,7 +35,7 @@ func NewClient(w http.ResponseWriter, r *http.Request, hub *Hub) (*Client, error
 	}
 
 	return &Client{
-		id:       uuid.New().String(),
+		id:       conn.Subprotocol(),
 		conn:     conn,
 		outbound: make(chan []byte),
 		hub:      hub,
@@ -53,16 +53,7 @@ func (c *Client) read() {
 	defer c.close()
 	for {
 		_, data, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-				log.Printf("client %v disconnected", c.id)
-				return
-			}
-			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("client %v lost connection", c.id)
-				return
-			}
-			log.Printf("an unexpected error occurred: %v", err)
+		if err := c.validRead(err); err != nil {
 			return
 		}
 		c.hub.broadcast <- data
@@ -71,10 +62,10 @@ func (c *Client) read() {
 
 // write continuously reads from the outbound channel and writes data to the WebSocket connection
 func (c *Client) write() {
-	log.Printf("client %v sent a message", c.id)
 	for data := range c.outbound {
 		c.conn.WriteMessage(websocket.TextMessage, data)
 	}
+	log.Printf("client %v sent a message", c.id)
 }
 
 func (c *Client) close() {
@@ -82,4 +73,15 @@ func (c *Client) close() {
 		log.Printf("something happened trying to close the connection: %v", err)
 	}
 	c.hub.disconnect <- c
+}
+
+func (c *Client) validRead(err error) error {
+	if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+		log.Printf("client %v disconnected", c.id)
+	} else if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+		log.Printf("client %v lost connection", c.id)
+	} else {
+		log.Printf("an unexpected error occurred: %v", err)
+	}
+	return err
 }
