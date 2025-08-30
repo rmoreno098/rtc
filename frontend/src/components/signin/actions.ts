@@ -6,15 +6,12 @@ export async function signin(
   setError: React.Dispatch<React.SetStateAction<string>>
 ) {
   try {
-    const authData = await pb
+    await pb
       .collection("users")
       .authWithPassword(formData.username, formData.password);
-    if (pb.authStore.isValid) {
-      console.log("Logged in!", authData);
-    }
+    return true;
   } catch (error) {
-    console.error(error);
     setError((error as Error).message);
-    return;
+    return false;
   }
 }

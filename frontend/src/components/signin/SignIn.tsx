@@ -17,8 +17,9 @@ export default function SignIn() {
   };
 
   const handleSubmit = async () => {
-    await signin(formData, setError);
-    navigate("/home");
+    if (await signin(formData, setError)) {
+      navigate("/home");
+    }
   };
 
   return (
