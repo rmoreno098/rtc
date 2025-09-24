@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Message } from "./models";
 import { initializeConnection, sendMessage } from "./actions";
 
-export default function ChatBox() {
+type ChatBoxProps = {
+  setModalMessage: React.Dispatch<React.SetStateAction<null | string>>;
+};
+
+export default function ChatBox({ setModalMessage }: ChatBoxProps) {
   const ws = useRef<WebSocket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
@@ -11,7 +15,7 @@ export default function ChatBox() {
     if (ws.current) {
       return;
     } else {
-      initializeConnection(ws, setMessages);
+      initializeConnection(ws, setMessages, setModalMessage);
     }
     return () => {
       ws.current?.close();

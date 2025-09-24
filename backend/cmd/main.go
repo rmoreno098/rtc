@@ -2,15 +2,18 @@ package main
 
 import (
 	"log"
-	"rtc/internal"
-	"rtc/pkg/pocketbase"
+	"rtc/config"
+	"rtc/internal/server"
+	"rtc/internal/services"
 )
 
 func main() {
-	hub := internal.NewHub()
-	app := pocketbase.NewPocketBase(hub)
+	cfg := config.Load()
+	jwt := services.NewJwtService(cfg.Jwt)
+	hub := services.NewHub()
+	app := server.New(hub, jwt)
 
-	if err := app.Start(); err != nil {
+	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
