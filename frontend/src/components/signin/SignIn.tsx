@@ -23,28 +23,30 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-700 px-4">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-center text-3xl font-semibold text-slate-800 mb-6">
-          <span className="text-blue-600 font-bold">R</span>eal{" "}
-          <span className="text-green-600 font-bold">T</span>ime{" "}
-          <span className="text-red-500 font-bold">C</span>hat
-        </h1>
-
-        <form
+    <main className="auth-page">
+      <div className="auth-layout">
+        <section className="auth-intro">
+          <a className="brand" href="/">
+            <span className="brand-mark">R</span>
+            real time chat
+          </a>
+          <div className="intro-copy">
+            <h1>Make space for the good stuff.</h1>
+          </div>
+          <div className="intro-note" />
+        </section>
+        <section className="auth-panel">
+          <p className="eyebrow">Welcome back</p>
+          <h2>Sign in</h2>
+          <p className="panel-subtitle">Pick up where you left off.</p>
+          <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-5"
-        >
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Username
-            </label>
+          className="auth-form">
+          <div className="field">
+            <label htmlFor="username">Username or email</label>
             <input
               type="text"
               name="username"
@@ -53,17 +55,11 @@ export default function SignIn() {
               value={formData.username}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className=""
             />
           </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
+          <div className="field">
+            <label htmlFor="password">Password</label>
             <input
               type="password"
               name="password"
@@ -72,42 +68,17 @@ export default function SignIn() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className=""
             />
           </div>
-
-          <div className="flex justify-between items-center">
-            <Link
-              to="/signup"
-              className="text-sm text-green-600 hover:text-green-800 font-medium"
-            >
-              Sign Up
-            </Link>
-            <button
-              type="submit"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Sign In
-            </button>
-          </div>
-
           {loginError && (
-            <div
-              className="relative bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
-              role="alert"
-            >
-              <strong className="font-semibold">Error:</strong> {loginError}
-              <button
-                onClick={() => setError("")}
-                className="absolute top-1 right-2 text-xl leading-none text-red-500 hover:text-red-700"
-                aria-label="Close"
-              >
-                &times;
-              </button>
-            </div>
+            <div className="form-error" role="alert">{loginError}</div>
           )}
-        </form>
+          <button type="submit" className="primary-button">Sign in</button>
+          </form>
+          <p className="auth-switch">New here? <Link to="/signup">Create an account</Link></p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

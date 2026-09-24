@@ -37,20 +37,28 @@ export default function SignUp() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-center mb-6">
-          Sign Up for RTC
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <main className="auth-page">
+      <div className="auth-layout">
+        <section className="auth-intro">
+          <a className="brand" href="/">
+            <span className="brand-mark">R</span>
+            real time chat
+          </a>
+          <div className="intro-copy">
+            <div className="intro-kicker">A quieter room for conversation</div>
+            <h1>Your next conversation starts here.</h1>
+            <p>Make a room for the people and ideas you want to keep close.</p>
+          </div>
+          <div className="intro-note" />
+        </section>
+        <section className="auth-panel">
+          <p className="eyebrow">Join the room</p>
+          <h2>Create your account</h2>
+          <p className="panel-subtitle">A few details, then you are in.</p>
+        <form onSubmit={handleSubmit} className="auth-form">
           {fields.map(({ label, name, type }) => (
-            <div key={name}>
-              <label
-                htmlFor={name}
-                className="block text-sm font-medium text-gray-700"
-              >
-                {label}
-              </label>
+            <div key={name} className="field">
+              <label htmlFor={name}>{label}</label>
               <input
                 type={type}
                 name={name}
@@ -58,24 +66,15 @@ export default function SignUp() {
                 value={(formData as FormData)[name]}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className=""
               />
             </div>
           ))}
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Sign Up
-          </button>
+          <button type="submit" className="primary-button">Create account</button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link to="/" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-        </p>
+        <p className="auth-switch">Already have an account? <Link to="/">Sign in</Link></p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

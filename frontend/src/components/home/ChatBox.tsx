@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Message } from "./models";
 import { initializeConnection, sendMessage } from "./actions";
+import pb from "../../pocketbase";
 
 type ChatBoxProps = {
   setModalMessage: React.Dispatch<React.SetStateAction<null | string>>;
@@ -10,6 +11,7 @@ export default function ChatBox({ setModalMessage }: ChatBoxProps) {
   const ws = useRef<WebSocket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
+  const currentUserId = pb.authStore.record?.id;
 
   useEffect(() => {
     if (ws.current) {
@@ -24,31 +26,27 @@ export default function ChatBox({ setModalMessage }: ChatBoxProps) {
   }, []);
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-100">
-      {/* Header */}
-      <header className="p-4 bg-white shadow-md text-center">
-        <h1 className="text-2xl font-semibold text-gray-800">Chat</h1>
-      </header>
-
-      {/* Messages */}
-      <main className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className="flex flex-col max-w-xl p-3 rounded-lg bg-white shadow-md"
-          >
-            <span className="text-xs text-gray-500 mb-1">
-              User {message.id}
-            </span>
-            <span className="text-gray-800">{message.message}</span>
-          </div>
-        ))}
-      </main>
-
-      {/* Input */}
-      <footer className="p-4 bg-white border-t shadow-md">
+    <div className="chat-shell">
+      <aside className="chat-sidebar">
+        <a className="brand" href="/"><span className="brand-mark">R</span>real time chat</a>
+        <div className="sidebar-caption">Your rooms</div>
+        <div className="room-item"><span className="room-dot" /> Lounge <span style={{ marginLeft: "auto", color: "#89cbd0" }}>01</span></div>
+      </aside>
+      <section className="chat-main">
+        <header className="chat-header">
+          <div><h1 className="chat-title">Lounge</h1><div className="chat-status"><span className="status-dot" /> Live room</div></div>
+          <div className="chat-status">{messages.length} {messages.length === 1 ? "message" : "messages"}</div>
+        </header>
+        <main className="messages">
+          {messages.length === 0 ? <div className="empty-state"><div className="empty-icon">R</div><h2>The room is quiet.</h2><p>Start the conversation with a thought, a question, or a simple hello.</p></div> : messages.map((message, index) => (
+            <div key={index} className={`message-row ${message.id === currentUserId ? "is-mine" : ""}`}>
+              <div className="message-bubble"><span className="message-author">{message.id === currentUserId ? "You" : `User ${message.id.slice(0, 6)}`}</span><span className="message-text">{message.message}</span></div>
+            </div>
+          ))}
+        </main>
+        <footer className="composer">
         <form
-          className="flex gap-2"
+          className="composer-form"
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage(ws, input, setInput);
@@ -56,19 +54,15 @@ export default function ChatBox({ setModalMessage }: ChatBoxProps) {
         >
           <input
             type="text"
-            className="flex-1 px-4 py-2 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message..."
           />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-full transition"
-          >
-            Send
-          </button>
+          <button type="submit" className="send-button">Send</button>
         </form>
       </footer>
+      </section>
     </div>
   );
 }

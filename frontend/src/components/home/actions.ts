@@ -3,7 +3,6 @@ import { Message } from "./models";
 
 const websocketURL = `ws://localhost:8090/api/rtc/connect?token=`;
 const websocketProtocol = "c_id";
-const userToken = pb.authStore.token;
 const userId = pb.authStore.record!.id;
 
 export const initializeConnection = async (
